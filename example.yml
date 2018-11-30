@@ -1,0 +1,98 @@
+- name: configure daemon
+  json_config:
+    path: "/path/to/daemon.json"
+    patch:
+      - {'op': 'add', 'path': '/foo', 'value': 'bar'}
+      - {'op': 'add', 'path': '/baz', 'value': [1, 2, 3]}
+      - {'op': 'remove', 'path': '/baz/1'}
+      - {'op': 'replace', 'path': '/baz/0', 'value': 42}
+      - {'op': 'remove', 'path': '/baz/1'}
+    create: true
+    backup: true
+    backup_file: "/path/to/daemon.json.bak"
+  register: config_result
+
+#
+# No change
+#
+# TASK [docker : debug] ********************************************************
+# ok: [192.168.88.50] => {
+#     "msg": {
+#         "backup": true, 
+#         "backup_file": null, 
+#         "changed": false, 
+#         "diff": "[]", 
+#         "failed": false, 
+#         "gid": 0, 
+#         "group": "root", 
+#         "mode": "0644", 
+#         "msg": null, 
+#         "owner": "root",
+#         "path": "/path/to/daemon.json", 
+#	  "resolve": null,
+#         "size": 0, 
+#         "state": "file", 
+#         "uid": 0
+#     }
+# }
+
+
+#
+# On change
+#
+# TASK [docker : debug] ********************************************************
+# ok: [192.168.88.50] => {
+#     "msg": {
+#         "backup": true, 
+#         "backup_file": "/path/to/daemon.json.bak", 
+#         "changed": true, 
+#         "diff": "[{\"path\": \"/foo\", \"value\": \"bar\", \"op\": \"add\"}, {\"path\": \"/baz\", \"value\": [42], \"op\": \"add\"}]", 
+#         "failed": false, 
+#         "gid": 0, 
+#         "group": "root", 
+#         "mode": "0644", 
+#         "msg": null, 
+#         "owner": "root", 
+#         "path": "/path/to/daemon.json", 
+#	  "resolve": null,
+#         "size": 54, 
+#         "state": "file", 
+#         "uid": 0
+#     }
+# }
+
+#
+# Read config
+#
+- name: read  `/insecure-registries` from config
+  json_config:
+    path: "{{ docker_configuration.files.daemon }}"
+    resolve: '/insecure-registries'
+  register: __json_config_resolve
+
+#
+# Result
+#
+# TASK [docker : debug] ********************************************************
+# ok: [192.168.88.50] => {
+#    "msg": {
+#        "backup": false, 
+#        "backup_file": null, 
+#        "changed": true, 
+#        "diff": null, 
+#        "failed": false, 
+#        "gid": 0, 
+#        "group": "root", 
+#        "mode": "0644", 
+#        "msg": "Resolved.", 
+#        "owner": "root", 
+#        "path": "/etc/docker/daemon.json", 
+#        "resolve": [
+#            "http://127.0.0.1:5001"
+#        ], 
+#        "size": 72, 
+#        "state": "file", 
+#        "uid": 0
+#    }
+# }
+
